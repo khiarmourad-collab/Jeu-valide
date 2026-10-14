@@ -1,0 +1,28 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Jeu Valide ! — Fennec animé</title><style>html,body{margin:0;width:100%;height:100%;background:#101b2a}iframe{display:block;border:0;width:100%;height:100%;height:100dvh}</style></head><body><iframe id="game" src="./rouages-camera-cases.html" title="Jeu Valide — Fennec animé"></iframe><script>
+const iframe=document.getElementById('game');
+iframe.addEventListener('load',()=>{
+const d=iframe.contentDocument;
+if(!d)return;
+const fox=d.getElementById('fox');
+if(!fox)return;
+const sty=d.createElement('style');
+sty.textContent=`#fox{transform:translate(-50%,-78%) scaleX(var(--direction,1)) !important;transform-origin:center 70% !important}#fox.walking{animation:walkBob .20s ease-in-out infinite alternate !important}@keyframes walkBob{0%{margin-top:0}100%{margin-top:-5px}}`;
+d.head.appendChild(sty);
+const subtitle=d.querySelector('.sub');if(subtitle)subtitle.textContent='Test 04 · Fennec orienté + marche';
+let last=parseFloat(fox.style.left)||22,timeout;
+const watch=new MutationObserver(()=>{
+ const next=parseFloat(fox.style.left);
+ if(!Number.isFinite(next)||Math.abs(next-last)<.05)return;
+ const previous=last;last=next;
+ fox.style.setProperty('--direction',next<previous?-1:1);
+ fox.classList.add('walking');
+ clearTimeout(timeout);
+ timeout=setTimeout(()=>fox.classList.remove('walking'),750);
+});
+watch.observe(fox,{attributes:true,attributeFilter:['style']});
+d.getElementById('reset')?.addEventListener('click',()=>{
+ fox.style.setProperty('--direction','1');
+ fox.classList.remove('walking');
+});
+});
+</script></body></html>
