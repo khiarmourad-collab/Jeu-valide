@@ -1,0 +1,44 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Jeu Valide — Test 8 directions</title><style>html,body{margin:0;height:100%;background:#101b2a}iframe{border:0;width:100%;height:100dvh;display:block}</style></head><body><iframe id="jeu" src="./rouages-camera-cases.html" title="Jeu Valide : déplacement en huit directions"></iframe><script>
+document.getElementById('jeu').addEventListener('load',function(){
+ const d=this.contentDocument; if(!d)return;
+ const css=d.createElement('style');
+ css.textContent=`.node{width:9%;height:12%;font-size:12px}.node.available{z-index:5}#fox{--face:1;--tilt:0deg;--depth:1;transform:translate(-50%,-78%) rotate(var(--tilt)) scaleX(var(--face)) scale(var(--depth));transform-origin:50% 74%;transition:left .68s linear,top .68s linear,transform .18s ease !important}.fox-walking{animation:stride .17s infinite alternate !important}@keyframes stride{from{margin-top:0}to{margin-top:-5px}}.direction-note{background:#244257;color:#d9f6ff;border-radius:10px;padding:10px 12px;margin:6px 0 12px;font-size:13px}.controls button{min-width:95px}`;
+ d.head.appendChild(css);
+ const inject=d.createElement('script');
+ inject.textContent=`
+const cpoints=[];
+const labels=[['↖','Avant-gauche'],['↑','Avant'],['↗','Avant-droite'],['←','Gauche'],['●','Centre'],['→','Droite'],['↙','Arrière-gauche'],['↓','Arrière'],['↘','Arrière-droite']];
+for(let row=0;row<3;row++)for(let col=0;col<3;col++){
+ const id=row*3+col,adj=[];
+ for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;let rr=row+dr,cc=col+dc;if(rr>=0&&rr<3&&cc>=0&&cc<3)adj.push(rr*3+cc)}
+ cpoints.push({id,x:47+(col-1)*18,y:52+(row-1)*20,name:labels[id][1],adj});
+}
+cells.splice(0,cells.length,...cpoints);
+for(const b of buttons)b.remove();buttons.splice(0,buttons.length);
+cells.forEach(c=>{const b=document.createElement('button');b.className='node';b.textContent=labels[c.id][0];b.style.left=c.x+'%';b.style.top=c.y+'%';b.addEventListener('click',()=>go(c.id));stage.appendChild(b);buttons.push(b)});
+let animTimeout,face=1;
+const cssNote=document.createElement('div');cssNote.className='direction-note';cssNote.textContent='Départ au centre · 8 cases autour : avant, arrière, côtés et diagonales.';document.querySelector('.hud').insertBefore(cssNote,controls);
+const originalGo=go;
+go=function(i){if(busy||!cells[current].adj.includes(i))return;const from=cells[current],to=cells[i],dx=to.x-from.x,dy=to.y-from.y;
+ const axisX=dx>0?'droite':dx<0?'gauche':'',axisY=dy>0?'arrière':dy<0?'avant':'';
+ const dir=axisX&&axisY?axisY+'-'+axisX:axisY||axisX;
+ if(dx!==0)face=dx>0?1:-1;
+ fox.style.setProperty('--face',face);
+ fox.style.setProperty('--tilt',dx&&dy?(dx>0?'-9deg':'9deg'):'0deg');
+ fox.style.setProperty('--depth',dy>0?'1.12':dy<0?'.87':'1');
+ fox.classList.add('fox-walking');
+ cssNote.textContent='Direction : '+dir+' · orientation '+(face>0?'droite':'gauche')+' · '+(dy<0?'éloignement':dy>0?'rapprochement':'même profondeur');
+ clearTimeout(animTimeout);
+ originalGo(i);
+ animTimeout=setTimeout(()=>fox.classList.remove('fox-walking'),730);
+};
+const btn=document.getElementById('reset');const clone=btn.cloneNode(true);btn.replaceWith(clone);
+function resetLab(){busy=false;current=4;face=1;fox.classList.remove('fox-walking');fox.style.setProperty('--face',1);fox.style.setProperty('--tilt','0deg');fox.style.setProperty('--depth',1);fox.style.transition='none';setFox(cells[4]);requestAnimationFrame(()=>requestAnimationFrame(()=>{fox.style.transition='left .68s linear,top .68s linear,transform .18s ease'}));cssNote.textContent='Départ au centre · choisis une des 8 directions.';draw()}
+clone.addEventListener('click',resetLab);
+const sub=document.querySelector('.sub');if(sub)sub.textContent='Test 05 · 8 directions et caméra';
+const note=document.querySelector('.note');if(note)note.textContent='Laboratoire de déplacements : les 9 repères sont provisoires et servent uniquement à tester les huit directions sur le décor illustré. Les vues avant/arrière sont simulées par la perspective tant que nous n’avons pas de sprites dédiés.';
+resetLab();
+`;
+ d.body.appendChild(inject);
+});
+</script></body></html>
